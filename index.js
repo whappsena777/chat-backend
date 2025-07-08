@@ -6,6 +6,7 @@ const cors = require('cors');
 const cloudinary = require('cloudinary').v2;
 require('dotenv').config();
 
+// Configurar Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -20,19 +21,18 @@ const io = new Server(server, {
   }
 });
 
+// Configurar subida de archivos
 const upload = multer({ dest: 'uploads/' });
 
 app.use(cors());
 app.use(express.json());
 
-io.on('connection', (socket) => {
-  console.log("Usuario conectado");
-
-  socket.on('chat-message', (data) => {
-    io.emit('chat-message', data); // reenvía a todos los conectados
-  });
+// Ruta raíz
+app.get('/', (req, res) => {
+  res.send('Servidor funcionando correctamente');
 });
 
+// Endpoint de subida de imagen
 app.post('/upload', upload.single('image'), (req, res) => {
   cloudinary.uploader.upload(req.file.path, function (err, result) {
     if (err) return res.status(500).json({ error: 'Error al subir imagen' });
@@ -40,11 +40,18 @@ app.post('/upload', upload.single('image'), (req, res) => {
   });
 });
 
-app.get('/', (req, res) => {
-  res.send('Servidor funcionando correctamente');
+// Socket.io
+io.on('connection', (socket) => {
+  console.log("Usuario conectado");
+
+  socket.on('chat-message', (data) => {
+    io.emit('chat-message', data); // reenvía a todos
+  });
 });
 
+// Puerto dinámico para Render
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Servidor funcionando en el puerto ${PORT}`);
+  console.log(`✅ Servidor funcionando en el puerto ${PORT}`);
 });
+
